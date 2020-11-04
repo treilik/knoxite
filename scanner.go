@@ -18,6 +18,7 @@ import (
 func findFiles(rootPath string, excludes []string) chan ArchiveResult {
 	c := make(chan ArchiveResult)
 	go func() {
+		var archive Archive
 		err := filepath.Walk(rootPath, func(path string, fi os.FileInfo, err error) error {
 			if err != nil {
 				if os.IsNotExist(err) {
@@ -59,7 +60,7 @@ func findFiles(rootPath string, excludes []string) chan ArchiveResult {
 			if !ok {
 				return &os.PathError{Op: "stat", Path: path, Err: errors.New("error reading metadata")}
 			}
-			archive := Archive{
+			archive = Archive{
 				Path:    path,
 				Mode:    fi.Mode(),
 				ModTime: fi.ModTime().Unix(),
@@ -91,7 +92,7 @@ func findFiles(rootPath string, excludes []string) chan ArchiveResult {
 		})
 
 		if err != nil {
-			c <- ArchiveResult{Archive: nil, Error: err}
+			c <- ArchiveResult{Archive: &archive, Error: err}
 		}
 		close(c)
 	}()
